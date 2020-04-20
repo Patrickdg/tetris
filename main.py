@@ -6,10 +6,12 @@ from pygame.time import Clock
 
 # TO-DO
 """
+o Documentation (OOP-approach, coordinate system, rotation formula)
 o Boundaries (1. Side, 2. Placed blocks X, 3. Ground X)
 X Placement system
 X Rotation mechanics
 o Score system (complete lines)
+o 'Next Piece' display
 """
 
 # PARAMETERS 
@@ -39,24 +41,12 @@ BLOCKS = {"L": {'coords': [[0,SZ], [SZ,SZ], [2*SZ,SZ], [2*SZ,0]],
 
 # Initialize vector to track unavailable coordinates and insert 'ground' in PLACED
 PLACED = {'coords': [], 'colors': []}
-for r in range(0,WIN_W, SZ):
+for r in range(0, WIN_W, SZ):
     PLACED['coords'].append([r, WIN_H])
     PLACED['colors'].append((255,0,0))
 
 
 # OBJECTS & FUNCTIONS
-def rotate(origin, point, angle):
-    """
-    Rotate a point counterclockwise by a given angle around a given origin.
-    The angle should be given in radians.
-    """
-    ox, oy = origin[0], origin[1]
-    px, py = point[0], point[1]
-
-    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
-    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-    return [round(qx), round(qy)]
-
 class Block():
     MID_SCREEN = WIN_W/2
 
@@ -106,7 +96,30 @@ class Block():
                 (piece[0], piece[1], 
                 SZ, SZ)
             )
-        print(self.coords)
+        # print(self.coords)
+
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+    The angle should be given in radians.
+    """
+    ox, oy = origin[0], origin[1]
+    px, py = point[0], point[1]
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return [round(qx), round(qy)]
+
+def complete_line(screen, coords):
+    for pair in coords:
+        PLACED['coords'].remove(pair)
+
+def move_placed_down(screen, coords):
+    for pair in coords: 
+        below = [pair[0], pair[1] + SZ]
+        if below not in coords: 
+            PLACED['coords'].remove(pair)
+            PLACED['coords'].append(below)
 
 def draw_placed(screen, coords_dict):
     for i,coord in enumerate(coords_dict['coords']):
@@ -118,7 +131,10 @@ def draw_placed(screen, coords_dict):
 # MAIN LOOP
 def main():
     clock = pygame.time.Clock()
+    
     active_block = Block(random.choice(list(BLOCKS.keys())))
+    x_coords = range(0, WIN_H, SZ)
+
     running = True
     while running:
         SCREEN.fill((0,0,0))
@@ -143,6 +159,24 @@ def main():
 
         if not active_block.placed:
             active_block.move('down')
+            
+        # Check for complete lines 
+        # for row in reversed(range(0, WIN_H, SZ)):
+        #     coords = []
+        #     for col in range(0, WIN_W, SZ):
+        #         coords.append([])
+
+        placed_y_coords = set()
+        for coord in PLACED['coords']: 
+            placed_y_coords.add(coord[1])
+        for y in placed_y_coords: 
+            coords = []
+            for x in x_coords:
+                coords.append([x, y])
+            if all(coord in list(placed_y_coords) for coord in coords):
+                complete_line(SCREEN, coords)
+                move_placed_down(SCREEN, PLACED['coords'])
+
         draw_placed(SCREEN, PLACED)
         active_block.draw(SCREEN)
         pygame.display.update()
