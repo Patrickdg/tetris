@@ -3,6 +3,13 @@ import random
 import pygame
 from pygame.time import Clock
 
+# TO-DO
+"""
+o Boundaries (1. Side, 2. Placed blocks X, 3. Ground X)
+X Placement system
+o Score system (complete lines)
+"""
+
 # PARAMETERS 
 pygame.init()   
 
@@ -28,17 +35,15 @@ BLOCKS = {"L": {'coords': [[0,SZ], [SZ,SZ], [2*SZ,SZ], [2*SZ,0]],
                 'color':(153,51,255)}
         }
 
-SZ = int(WIN_W/10)
-
 # Initialize vector to track unavailable coordinates and insert 'ground' in PLACED
-PLACED = []
+PLACED = {'coords': [], 'colors': []}
 for r in range(0,WIN_W, SZ):
-    PLACED.insert(0,[r, WIN_H])
+    PLACED['coords'].append([r, WIN_H])
+    PLACED['colors'].append((255,0,0))
 
 # OBJECTS 
 class Block():
     MID_SCREEN = WIN_W/2
-    DY = SZ
 
     def __init__(self, block):
         self.block = block
@@ -59,25 +64,26 @@ class Block():
     def move(self, dir):
         x_change = 0
         y_change = 0 
-        if dir == 'left' and not self.side_flag:
+        if dir == 'left':
             x_change = -SZ
-        elif dir == 'right' and not self.side_flag:
+        elif dir == 'right':
             x_change = SZ
         elif dir == 'up':
             y_change = -SZ
         elif dir == 'down':
             y_change = SZ
         
-        self.coords = [[x + x_change, y + y_change] for [x,y] in self.coords]
+        new_coords = [[x + x_change, y + y_change] for [x,y] in self.coords]
+        if any(coord in new_coords for coord in PLACED['coords']):
+            self.place()
+        else:
+            self.coords = new_coords
 
-        side_flag = any(0 in coord for coord in self.coords) or any((WIN_W - SZ) in coord for coord in self.coords)
-        self.side_flag = True if side_flag else False
-
-    # TO-DO: trigger transfer self.coords into placed vector for crash detection (other pieces AND bare floor)
     def place(self):
         self.placed = True
         for coord in self.coords: 
-            PLACED.insert(coord)
+            PLACED['coords'].append(coord)
+            PLACED['colors'].append(self.color)
 
     def draw(self,screen):
         for piece in self.coords:
@@ -86,8 +92,13 @@ class Block():
                 SZ, SZ)
             )
         print(self.coords)
-        print(PLACED)
-    
+
+def draw_placed(screen, coords_dict):
+    for i,coord in enumerate(coords_dict['coords']):
+        pygame.draw.rect(screen, coords_dict['colors'][i], 
+                        (coord[0], coord[1], 
+                        SZ, SZ))
+    # print(PLACED)
 
 # MAIN LOOP
 def main():
@@ -96,6 +107,10 @@ def main():
     running = True
     while running:
         SCREEN.fill((0,0,0))
+
+        if active_block.placed:
+            active_block = Block(random.choice(list(BLOCKS.keys())))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -113,9 +128,10 @@ def main():
 
         if not active_block.placed:
             active_block.move('down')
+        draw_placed(SCREEN, PLACED)
         active_block.draw(SCREEN)
         pygame.display.update()
-        clock.tick(2)
+        clock.tick(3)
     pygame.quit()
 
 main()
