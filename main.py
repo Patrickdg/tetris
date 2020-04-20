@@ -1,4 +1,5 @@
 import os 
+import math
 import random
 import pygame
 from pygame.time import Clock
@@ -7,6 +8,7 @@ from pygame.time import Clock
 """
 o Boundaries (1. Side, 2. Placed blocks X, 3. Ground X)
 X Placement system
+X Rotation mechanics
 o Score system (complete lines)
 """
 
@@ -41,7 +43,20 @@ for r in range(0,WIN_W, SZ):
     PLACED['coords'].append([r, WIN_H])
     PLACED['colors'].append((255,0,0))
 
-# OBJECTS 
+
+# OBJECTS & FUNCTIONS
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+    The angle should be given in radians.
+    """
+    ox, oy = origin[0], origin[1]
+    px, py = point[0], point[1]
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return [round(qx), round(qy)]
+
 class Block():
     MID_SCREEN = WIN_W/2
 
@@ -60,7 +75,9 @@ class Block():
                               self.coords[n][1] + SZ]
 
     def rotate(self):
-        pass
+        for n in range(len(self.coords)): 
+            self.coords[n] = rotate(self.coords[1], self.coords[n], math.radians(90))
+                              
     def move(self, dir):
         x_change = 0
         y_change = 0 
@@ -68,8 +85,6 @@ class Block():
             x_change = -SZ
         elif dir == 'right':
             x_change = SZ
-        elif dir == 'up':
-            y_change = -SZ
         elif dir == 'down':
             y_change = SZ
         
