@@ -1,14 +1,10 @@
-import pygame
 from pygame.time import Clock
 
 from blocks import *
 
 # TO-DO
 """
-o Documentation (OOP-approach, coordinate system, rotation formula)
 o Boundaries (1. Side, 2. Placed blocks X, 3. Ground X)
-X Placement system
-X Rotation mechanics
 o Score system (complete lines)
 o 'Next Piece' display
 """

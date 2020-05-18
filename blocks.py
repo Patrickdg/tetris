@@ -1,4 +1,5 @@
 # LIBRARIES
+import pygame
 import os 
 import math
 import random
@@ -112,4 +113,3 @@ def draw_placed(screen, coords_dict):
         pygame.draw.rect(screen, coords_dict['colors'][i], 
                         (coord[0], coord[1], 
                         SZ, SZ))
-    # print(PLACED)
